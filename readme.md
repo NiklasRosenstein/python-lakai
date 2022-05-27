@@ -4,6 +4,10 @@ Lakai is a wrapper around [Lark][] that provides a convenient API.
 
   [Lark]: https://github.com/lark-parser/lark
 
+__Useful links__:
+
+* [Lark Cheatsheet](https://github.com/lark-parser/lark/blob/master/docs/_static/lark_cheatsheet.pdf)
+
 ## Installation
 
     $ pip install lakai
