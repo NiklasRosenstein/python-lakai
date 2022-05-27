@@ -1,0 +1,5 @@
+[[entries]]
+id = "9926a6ff-c07e-47be-b546-2c136a6c4132"
+type = "improvement"
+description = "allow passing a sequence of start rule names to `from_string()` and `from_resource()`"
+author = "@NiklasRosenstein"

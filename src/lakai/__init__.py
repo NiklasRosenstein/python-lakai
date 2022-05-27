@@ -2,7 +2,7 @@ import dataclasses
 import enum
 import io
 import sys
-from typing import Any, Callable, Generic, List, Optional, TextIO, TypeVar
+from typing import Any, Callable, Generic, List, Optional, Sequence, TextIO, TypeVar
 
 import lark
 import lark.exceptions
@@ -97,14 +97,14 @@ def convert_lark_tree(tree: lark.tree.ParseTree) -> Node[Leaf]:
     return Node(str(tree.data), children)
 
 
-def from_string(grammar: str, parser: Parser = Parser.EARLEY, start: str = "start", **options: Any) -> Lakai:
+def from_string(grammar: str, parser: Parser = Parser.EARLEY, start: "str | Sequence[str]" = "start", **options: Any) -> Lakai:
     """Create a Lakai parser using the Lark grammar string."""
 
     return Lakai(_lark.Lark(grammar, parser=parser.name.lower(), start=start, **options))
 
 
 def from_resource(
-    package: str, filename: str, encoding: str, parser: Parser = Parser.EARLEY, start: str = "start", **options: Any
+    package: str, filename: str, encoding: str, parser: Parser = Parser.EARLEY, start: "str | Sequence[str]" = "start", **options: Any
 ) -> Lakai:
     """Create a Lakai parser using the Lark grammar loaded via :mod:`pkg_resources`."""
 
