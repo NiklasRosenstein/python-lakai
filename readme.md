@@ -1,6 +1,8 @@
 # lakai
 
-Lakai is a wrapper around [Lark][] that provides an easier to use API.
+Lakai is a wrapper around [Lark][] that provides a convenient API.
+
+  [Lark]: https://github.com/lark-parser/lark
 
 ## Installation
 
