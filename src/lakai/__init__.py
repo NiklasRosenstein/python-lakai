@@ -63,20 +63,24 @@ class Transformer:
 
 
 @dataclasses.dataclass
-class Leaf:
-    type: str
-    value: str
+class Token:
     line: int
     column: int
     end_line: int = dataclasses.field(repr=False)
     end_column: int = dataclasses.field(repr=False)
+
+
+@dataclasses.dataclass
+class Leaf(Token):
+    type: str
+    value: str
 
     def __len__(self) -> int:
         return len(self.value)
 
 
 @dataclasses.dataclass
-class Node(Generic[T]):
+class Node(Token, Generic[T]):
     name: str
     children: List["T | Node[T]"]
 
@@ -90,21 +94,29 @@ def convert_lark_tree(tree: lark.tree.ParseTree) -> Node[Leaf]:
             children.append(convert_lark_tree(element))
         elif isinstance(element, lark.lexer.Token):
             children.append(
-                Leaf(element.type, element.value, element.line, element.column, element.end_line, element.end_column)
+                Leaf(element.line, element.column, element.end_line, element.end_column, element.type, element.value)
             )
         else:
             raise RuntimeError(f"encountered invalid node in Lark tree: {element!r}")
-    return Node(str(tree.data), children)
+    token = tree.data
+    return Node(token.line, token.column, token.end_line, token.end_column, str(token), children)
 
 
-def from_string(grammar: str, parser: Parser = Parser.EARLEY, start: "str | Sequence[str]" = "start", **options: Any) -> Lakai:
+def from_string(
+    grammar: str, parser: Parser = Parser.EARLEY, start: "str | Sequence[str]" = "start", **options: Any
+) -> Lakai:
     """Create a Lakai parser using the Lark grammar string."""
 
     return Lakai(_lark.Lark(grammar, parser=parser.name.lower(), start=start, **options))
 
 
 def from_resource(
-    package: str, filename: str, encoding: str, parser: Parser = Parser.EARLEY, start: "str | Sequence[str]" = "start", **options: Any
+    package: str,
+    filename: str,
+    encoding: str,
+    parser: Parser = Parser.EARLEY,
+    start: "str | Sequence[str]" = "start",
+    **options: Any,
 ) -> Lakai:
     """Create a Lakai parser using the Lark grammar loaded via :mod:`pkg_resources`."""
 

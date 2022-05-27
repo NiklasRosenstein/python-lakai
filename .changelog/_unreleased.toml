@@ -1,0 +1,5 @@
+[[entries]]
+id = "467a959a-8a3b-46ed-b65e-a671f4240073"
+type = "feature"
+description = "store line, column, end_line and end_column in Nodes as well"
+author = "@NiklasRosenstein"
