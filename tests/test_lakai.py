@@ -14,19 +14,17 @@ def test_lakai() -> None:
     parser = lakai.from_string(grammar, start="sum")
     tree = parser.parse("1 + 3 * 2 + 4 / 2")
     lakai.pprint(tree, indent="    ")
-    assert (
-        lakai.pformat(tree, indent="    ").strip()
-        == textwrap.dedent(
-            """
-    sum
+    expected = textwrap.dedent(
+        """
         sum
-            INT: '1'
+            sum
+                INT: '1'
+                product
+                    INT: '3'
+                    INT: '2'
             product
-                INT: '3'
+                INT: '4'
                 INT: '2'
-        product
-            INT: '4'
-            INT: '2'
-    """
-        ).strip()
-    )
+        """
+    ).strip()
+    assert lakai.pformat(tree, indent="    ").strip() == expected

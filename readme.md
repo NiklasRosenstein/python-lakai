@@ -10,9 +10,25 @@ Lakai is a wrapper around [Lark][] that provides an easier to use API.
 
 ```py
 import lakai
-parser = lakai.from_resource(__name__, "grammar.lark")
-tree = parser.parse("1 + 2 - 3")
+grammar = r"""
+    %ignore /\s+/
+    %import common.INT
+    ?atom: INT
+    ?product: atom | product "*" atom | product "/" atom
+    ?sum: product | sum "+" product | sum "-" product
+"""
+parser = lakai.from_string(grammar, start="sum")
+tree = parser.parse("1 + 3 * 2 + 4 / 2")
 lakai.pprint(tree)
+# sum
+#     sum
+#         INT: '1'
+#         product
+#             INT: '3'
+#             INT: '2'
+#     product
+#         INT: '4'
+#         INT: '2'
 ```
 
 To use Lakai with a Lark standalone parser:
