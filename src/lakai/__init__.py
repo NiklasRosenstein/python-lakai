@@ -2,7 +2,7 @@ import dataclasses
 import enum
 import io
 import sys
-from typing import Any, Callable, List, Optional, TextIO
+from typing import Any, Callable, Generic, List, Optional, TextIO, TypeVar
 
 import lark
 import lark.exceptions
@@ -23,6 +23,7 @@ __all__ = [
     "pprint",
 ]
 
+T = TypeVar("T")
 _LarkErrorHandler = Callable[[lark.exceptions.UnexpectedInput], bool]
 
 
@@ -38,8 +39,27 @@ class Lakai:
     def __init__(self, lark: _lark.Lark) -> None:
         self.lark = lark
 
-    def parse(self, text: str, start: Optional[str] = None, on_error: Optional[_LarkErrorHandler] = None) -> "Node":
+    def parse(
+        self, text: str, start: Optional[str] = None, on_error: Optional[_LarkErrorHandler] = None
+    ) -> "Node[Leaf]":
         return convert_lark_tree(self.lark.parse(text, start, on_error))
+
+
+class Transformer:
+    def visit(self, element: "Leaf | Node[Any]") -> Any:
+        if isinstance(element, Node):
+            name = element.name
+            for index, child in enumerate(element.children):
+                element.children[index] = self.visit(child)
+        else:
+            name = element.type
+        method = getattr(self, f"visit_{name}", None)
+        if method is not None:
+            return method(element)
+        return self.generic_visit(element)
+
+    def generic_visit(self, element: "Leaf | Node[Any]") -> Any:
+        return element
 
 
 @dataclasses.dataclass
@@ -56,15 +76,15 @@ class Leaf:
 
 
 @dataclasses.dataclass
-class Node:
+class Node(Generic[T]):
     name: str
-    children: List["Leaf | Node"]
+    children: List["T | Node[T]"]
 
 
-def convert_lark_tree(tree: lark.tree.ParseTree) -> Node:
+def convert_lark_tree(tree: lark.tree.ParseTree) -> Node[Leaf]:
     """Converts a Lark tree to a Lakai tree."""
 
-    children: List["Leaf | Node"] = []
+    children: List["Leaf | Node[Leaf]"] = []
     for element in tree.children:
         if isinstance(element, lark.lark.Tree):  # type: ignore[attr-defined]
             children.append(convert_lark_tree(element))
@@ -74,8 +94,7 @@ def convert_lark_tree(tree: lark.tree.ParseTree) -> Node:
             )
         else:
             raise RuntimeError(f"encountered invalid node in Lark tree: {element!r}")
-    assert isinstance(tree.data, str)
-    return Node(tree.data, children)
+    return Node(str(tree.data), children)
 
 
 def from_string(grammar: str, parser: Parser = Parser.EARLEY, start: str = "start", **options: Any) -> Lakai:
@@ -93,14 +112,14 @@ def from_resource(
     return from_string(grammar, parser=parser, start=start, **options)
 
 
-def pformat(tree: Node, indent: str = "  ", level: int = 0, colored: bool = False) -> str:
+def pformat(tree: Node[Leaf], indent: str = "  ", level: int = 0, colored: bool = False) -> str:
     fp = io.StringIO()
     pprint(tree, indent, level, colored, fp)
     return fp.getvalue()
 
 
 def pprint(
-    tree: Node, indent: str = "  ", level: int = 0, colored: Optional[bool] = None, fp: Optional[TextIO] = None
+    tree: Node[Leaf], indent: str = "  ", level: int = 0, colored: Optional[bool] = None, fp: Optional[TextIO] = None
 ) -> None:
     def _colored(s: str, *args: Any, **kwargs: Any) -> str:
         return s
