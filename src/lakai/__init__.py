@@ -2,7 +2,7 @@ import dataclasses
 import enum
 import io
 import sys
-from typing import Any, Callable, Generic, List, Optional, Sequence, TextIO, TypeVar
+from typing import Any, Callable, Generic, List, Optional, Sequence, TextIO, TypeVar, cast
 
 import lark
 import lark.exceptions
@@ -98,7 +98,7 @@ def convert_lark_tree(tree: lark.tree.ParseTree) -> Node[Leaf]:
             )
         else:
             raise RuntimeError(f"encountered invalid node in Lark tree: {element!r}")
-    token = tree.data
+    token = cast(Token, tree.data)
     return Node(token.line, token.column, token.end_line, token.end_column, str(token), children)
 
 
